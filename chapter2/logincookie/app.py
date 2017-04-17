@@ -1,4 +1,5 @@
-from flask import Flask
+from flask import Flask,request
+from redis import Redis
 
 app = Flask(__name__)
 
@@ -6,15 +7,23 @@ app = Flask(__name__)
 '''
 使用token类型的cookie进行登陆态的保持
 看能支持多少个人同时在线？
+使用hmap存储session，随机码是key，userid是实际的值
 '''
 
-@app.route('/check_login')
+@app.route('/check_login',methods='GET')
 # 检查当前的登录状态
+# 查看sessionid对应的userid是否存在
 def check_login():
-    return 'Hello World!'
+    sessionid = request.args.get('sessionid', '', type=str)
+
+    conn = Redis("127.0.0.1",6379)
+    userid = conn.hget("login_status:",sessionid)
+    if(userid == False):
+        return {'code': 1006};
+    return {'code' : 0,'userid':userid}
 
 
-@app.route('/update_login_status')
+@app.route('/update_login_status',methods='POST')
 # 更新登录状态,访问页面时进行登陆态的需求
 def update_login_status():
     return 'Hello World!'
