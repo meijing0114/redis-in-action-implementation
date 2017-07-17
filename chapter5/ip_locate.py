@@ -8,7 +8,6 @@ def ip_to_score(ip_address):
         if '/' in v:
             tmp = v.split('/')
             v = tmp[0]
-            print v
         score = score * 256 + int(v, 10)
     return score
 
@@ -27,7 +26,7 @@ def import_ips_to_redis(conn, filename):
             continue
 
         city_id = row[2] + '_' + str(count)
-        #conn.zadd('ip2cityid:', city_id, start_ip)
+        conn.zadd('ip2cityid:', city_id, start_ip)
 
 def import_cities_to_redis(conn, filename):
     for row in csv.reader(open(filename, 'rb')):
