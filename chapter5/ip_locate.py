@@ -1,6 +1,7 @@
 import csv
 import json
 from redis import Redis
+import sys
 
 def ip_to_score(ip_address):
     score = 0
@@ -34,16 +35,18 @@ def import_cities_to_redis(conn, filename):
             continue
         row = [i.decode('latin-1') for i in row]
         city_id = row[0]
-        country = row[1]
-        region = row[2]
-        city = row[3]
+        country = row[5]
+        region = row[3]
+        city = row[10]
         conn.hset('cityid2city:', city_id, json.dumps([city, region, country]))
 
 
 def find_city_by_ip(conn, ip_address):
     to_find_score = ip_to_score(ip_address)
-    ranges = conn.zrangebyscore('ip2cityid',0,to_find_score)
-    city_id = ranges[-1]
+    # ranges = conn.zrangebyscore('ip2cityid:',0,to_find_score)
+    city_id = conn.zrevrangebyscore('ip2cityid:',to_find_score,0,0,1)
+
+    city_id = city_id[0].partition('_')[0]
     print city_id
     city_info = conn.hget('cityid2city:', city_id)
     print city_info
@@ -51,5 +54,8 @@ def find_city_by_ip(conn, ip_address):
 if __name__ == '__main__':
     conn = Redis("127.0.0.1", 6379)
     print conn
-    import_ips_to_redis(conn,"/Users/liangchen/Downloads/GeoLite2-City-CSV_20170606/GeoLite2-City-Blocks-IPv4.csv")
+
+    ip_address = sys.argv[1]
+    #import_ips_to_redis(conn,"/Users/liangchen/Downloads/GeoLite2-City-CSV_20170606/GeoLite2-City-Blocks-IPv4.csv")
     #import_cities_to_redis(conn, "/Users/liangchen/Downloads/GeoLite2-City-CSV_20170606/GeoLite2-City-Locations-en.csv")
+    find_city_by_ip(conn, ip_address)
