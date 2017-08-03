@@ -8,6 +8,8 @@ CONFIGS = {}
 
 REDIS_CONNECTIONS = {}
 
+config_connection = redis.Redis("127.0.0.1", 6379)
+
 def redis_connection(component, wait=1):
     key = 'config:redis:' + component
     def wrapper(function):
