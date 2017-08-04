@@ -16,8 +16,17 @@ def find_prefix_range(prefix):
     suffix = valid_characters[(posn or 1) - 1]
     return prefix[:-1] + suffix + '{', prefix + '{'
 
+valid_utf_8_characters = '\u0000\u10FFFF'
+
+def find_utf8_prefix_range(prefix):
+    posn = bisect.bisect_left(valid_characters, prefix[-1:])
+    suffix = valid_utf_8_characters[(posn or 1) - 1]
+    return prefix[:-1] + suffix + '{', prefix + '{'
+
 def autocomplete_on_prefix(conn, guild, prefix):
     start, end = find_prefix_range(prefix)
+    print "start:" + start + "end:" + end
+
     identifier = str(uuid.uuid4())
     start += identifier
     end += identifier
@@ -31,7 +40,7 @@ def autocomplete_on_prefix(conn, guild, prefix):
             sindex = pipeline.zrank(zset_name, start)
             eindex = pipeline.zrank(zset_name, end)
             erange = min(sindex + 9, eindex - 2)
-            print "sindex:" + sindex + "eindex:" + eindex + "erange:" + erange
+            print "sindex:" , sindex , "eindex:" , eindex , "erange:" , erange
             pipeline.multi()
             pipeline.zrem(zset_name, start, end)
             pipeline.zrange(zset_name, sindex, erange)
@@ -75,7 +84,7 @@ def autocomplete():
 
     print list
 
-    return  json.dump(list)
+    return  "1"
 
 if __name__ == '__main__':
     app.run()
