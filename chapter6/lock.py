@@ -2,6 +2,36 @@ import uuid
 import time
 import redis
 import math
+from redis import Redis
+
+from flask import Flask,request
+
+
+app = Flask(__name__)
+
+@app.route('/watch/test',methods=['GET'])
+def watch_test():
+    conn = Redis("127.0.0.1", 6379)
+    pipe = conn.pipeline(True)
+
+    while(1):
+        try:
+            pipe.watch("user")
+            #print "user watched"
+            pipe.incr("other",1)
+            pipe.multi()
+            pipe.incr("user",1)
+            #print "multi success"
+            pipe.execute()
+            pipe.unwatch()
+            #print "user unwatched"
+            break;
+
+        except redis.exceptions.WatchError:
+            print "watch exception"
+            pass
+    return "0";
+
 
 def acquire_lock(conn, lockname, acquire_timeout=10):
     identifier = str(uuid.uuid4())
@@ -85,3 +115,5 @@ def acquire_lock_with_timeout(
 
     return False
 
+if __name__ == '__main__':
+    app.run()
